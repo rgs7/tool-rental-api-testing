@@ -1,0 +1,592 @@
+{
+	"info": {
+		"_postman_id": "b182cb94-f6b4-4038-a951-c34920c1167b",
+		"name": "Tool Rental",
+		"description": "This API allows you to reserve a tool.\n\nThe API is available at `https://simple-tool-rental-api.glitch.me`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42441677"
+	},
+	"item": [
+		{
+			"name": "Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// VARIABLES\r",
+							"const responseData = pm.response.json();\r",
+							"\r",
+							"// TESTS\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Status is UP\", () => {\r",
+							"    pm.expect(responseData[\"status\"]).to.eql(\"UP\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/status",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"status"
+					]
+				},
+				"description": "Returns the status of the API.\n\n- `UP` indicates that the API is running as expected.\n    \n- `DOWN` indicates that the API is currently not working."
+			},
+			"response": []
+		},
+		{
+			"name": "Get all tools",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// VARIABLES\r",
+							"const responseData = pm.response.json();\r",
+							"const tools = responseData.filter((tool) => tool.inStock === true)\r",
+							"const tool = tools[0];\r",
+							"const category = pm.collectionVariables.get(\"category\")\r",
+							"\r",
+							"if (tool) {\r",
+							"    pm.globals.set(\"toolId\", tool.id);\r",
+							"}\r",
+							"\r",
+							"// TESTS\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Tool found\", () => {\r",
+							"    pm.expect(tool).to.be.an(\"object\");\r",
+							"    pm.expect(tool.inStock).to.be.true;\r",
+							"    pm.expect(tool.category).to.eql(category);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/tools?category={{category}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tools"
+					],
+					"query": [
+						{
+							"key": "category",
+							"value": "{{category}}"
+						},
+						{
+							"key": "results",
+							"value": "2",
+							"disabled": true
+						},
+						{
+							"key": "available",
+							"value": "true",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Returns a list of tools from the inventory.\n\n**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `category` | string | query | Optional - Specifies the category of tools you want to be returned.  <br>It can be one of: ladders, plumbing, power-tools, trailers,  <br>electric-generators, lawn-care. |\n| `results` | integer | query | Optional - Specifies the number of results you want. Must be number  <br>between 1 and 20. By default, only 20 tools will be displayed. |\n| `available` | boolean | query | Optional - Specifies the availability of the tools. By default, all tools will be displayed. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 200 OK | Indicates a successful response. |\n| 400 Bad Request | Indicates that the parameters provided are invalid. |"
+			},
+			"response": []
+		},
+		{
+			"name": "Get a single tool",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// VARIABLES\r",
+							"const responseData = pm.response.json();\r",
+							"\r",
+							"// TESTS\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"toolId is correct\"), () => {\r",
+							"    pm.expect(responseData.id).to.eql(parseInt(pm.globals.get(\"toolId\")));\r",
+							"};\r",
+							"\r",
+							"pm.test(\"Tool stock is greater than 0\"), () => {\r",
+							"    pm.expect(responseData[\"current-stock\"]).to.be.above(0);\r",
+							"};\r",
+							"\r",
+							"pm.execution.setNextRequest(\"Create a new order\");"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/tools/:toolId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tools",
+						":toolId"
+					],
+					"query": [
+						{
+							"key": "user-manual",
+							"value": "true",
+							"disabled": true
+						}
+					],
+					"variable": [
+						{
+							"key": "toolId",
+							"value": "{{toolId}}"
+						}
+					]
+				},
+				"description": "Returns a single tool from the inventory.\n\n**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `toolId` | integer | path | Specifies the id of the tool you wish to retrieve. |\n| `user-manual` | boolean | query | Optional - Returns the user manual in PDF format. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 200 OK | Indicates a successful response. |\n| 404 Not found | Indicates that there is no tool with the specified id. |"
+			},
+			"response": []
+		},
+		{
+			"name": "Create a new order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// VARIABLES\r",
+							"const responseData = pm.response.json();\r",
+							"\r",
+							"// TESTS\r",
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.globals.set(\"orderId\", responseData.orderId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"toolId\": {{toolId}},\r\n    \"customerName\": \"{{$randomFullName}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/orders",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders"
+					]
+				},
+				"description": "**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `Authorization` | string | header | Specifies the bearer token of the API client. |\n| `toolId` | integer | body | Specifies the tool id. |\n| `customerName` | string | body | Specifies the name of the customer. |\n| `comment` | string | body | Optional. Specifies a comment. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 201 Created | Indicates that the order has been created successfully. |\n| 400 Bad Request | Indicates that the parameters provided are invalid. |\n| 401 Unauthorized | Indicates that request has not been authenticated. Check the response body for additional details. |\n\nExample request body:\n\n```\n{\n \"toolId\": 1643,\n \"customerName\": \"John Doe\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get all orders",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TESTS\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/orders",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders"
+					]
+				},
+				"description": "Returns all orders created by the API client.\n\n**`GET /orders`**\n\n**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `Authorization` | string | header | Specifies the bearer token of the API client. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 200 OK | Indicates a successful response. |\n| 401 Unauthorized | Indicates that request has not been authenticated. Check the response body for additional details. |"
+			},
+			"response": []
+		},
+		{
+			"name": "Get a single order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TESTS\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/orders/:orderId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders",
+						":orderId"
+					],
+					"query": [
+						{
+							"key": "invoice",
+							"value": "true",
+							"disabled": true
+						}
+					],
+					"variable": [
+						{
+							"key": "orderId",
+							"value": "{{orderId}}"
+						}
+					]
+				},
+				"description": "Returns a single order.\n\n**`GET /orders/:orderId`**\n\n**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `orderId` | string | path | Specifies the order id. |\n| `invoice` | boolean | query | Optional - Shows the PDF invoice |\n| `Authorization` | string | header | Specifies the bearer token of the API client. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 200 OK | Indicates a successful response. |\n| 401 Unauthorized | Indicates that request has not been authenticated. Check the response body for additional details. |\n| 404 Not found | Indicates that there is no order with the specified id associated with the API client. |"
+			},
+			"response": []
+		},
+		{
+			"name": "Update an order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TESTS\r",
+							"pm.test(\"Status code is 204\", function () {\r",
+							"    pm.response.to.have.status(204);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"customerName\": \"Loki\",\r\n    \"comment\": \"Updated comment.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/orders/:orderId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders",
+						":orderId"
+					],
+					"variable": [
+						{
+							"key": "orderId",
+							"value": "{{orderId}}"
+						}
+					]
+				},
+				"description": "**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `orderId` | string | path | Specifies the order id. |\n| `customerName` | string | body | Optional. Specifies the name of the customer. |\n| `comment` | string | body | Optional. Specifies a comment. |\n| `Authorization` | string | header | Specifies the bearer token of the API client. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 204 No Content | Indicates that the order has been updated successfully. |\n| 400 Bad Request | Indicates that the parameters provided are invalid. |\n| 401 Unauthorized | Indicates that request has not been authenticated. Check the response body for additional details. |\n| 404 Not found | Indicates that there is no order with the specified id associated with the API client. |\n\nExample request body:\n\n``` json\n{\n \"customerName\": \"Joe Doe\"\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete an order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TESTS\r",
+							"pm.test(\"Status code is 204\", function () {\r",
+							"    pm.response.to.have.status(204);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/orders/:orderId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders",
+						":orderId"
+					],
+					"variable": [
+						{
+							"key": "orderId",
+							"value": "{{orderId}}"
+						}
+					]
+				},
+				"description": "**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `orderId` | string | path | Specifies the order id. |\n| `Authorization` | string | header | Specifies the bearer token of the API client. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 204 No Content | Indicates that the order has been deleted successfully. |\n| 400 Bad Request | Indicates that the parameters provided are invalid. |\n| 401 Unauthorized | Indicates that request has not been authenticated. Check the response body for additional details. |\n| 404 Not found | Indicates that there is no order with the specified id associated to the API client. |"
+			},
+			"response": []
+		},
+		{
+			"name": "Verify deleted order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TESTS\r",
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.execution.setNextRequest(null)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/orders/:orderId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders",
+						":orderId"
+					],
+					"query": [
+						{
+							"key": "invoice",
+							"value": "true",
+							"disabled": true
+						}
+					],
+					"variable": [
+						{
+							"key": "orderId",
+							"value": "{{orderId}}"
+						}
+					]
+				},
+				"description": "Returns a single order.\n\n**`GET /orders/:orderId`**\n\n**Parameters**\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `orderId` | string | path | Specifies the order id. |\n| `invoice` | boolean | query | Optional - Shows the PDF invoice |\n| `Authorization` | string | header | Specifies the bearer token of the API client. |\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 200 OK | Indicates a successful response. |\n| 401 Unauthorized | Indicates that request has not been authenticated. Check the response body for additional details. |\n| 404 Not found | Indicates that there is no order with the specified id associated with the API client. |"
+			},
+			"response": []
+		},
+		{
+			"name": "Register a new API client",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// TESTS\r",
+							"pm.test(\"Status code is 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"clientName\": \"Postman\",\r\n    \"clientEmail\": \"{{$randomUserName}}@example.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api-clients",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api-clients"
+					]
+				},
+				"description": "Some endpoints may require authentication. To submit or  \nview an order, you need to register your API client and obtain an access  \ntoken.\n\nThe endpoints that require authentication expect a bearer token sent in the `Authorization` header.\n\nExample:\n\n`Authorization: Bearer YOUR_TOKEN`\n\n### Register a new API client\n\n**`POST /api-clients`**\n\nThe request body needs to be in JSON format.\n\n| Name | Type | In | Description |\n| --- | --- | --- | --- |\n| `clientName` | string | body | Specifies the name of the API client. |\n| `clientEmail` | string | body | Specifies the email address of the API client. |\n\nNote: You don't need to provide a real email address.\n\n**Status codes**\n\n| Status code | Description |\n| --- | --- |\n| 201 Created | Indicates that the client has been registered successfully. |\n| 400 Bad Request | Indicates that the parameters provided are invalid. |\n| 409 Conflict | Indicates that an API client has already been registered with this email address. |\n\nExample request body:\n\n``` json\n{\n   \"clientName\": \"Postman\",\n   \"clientEmail\": \"postman@example.com\"\n}\n\n ```\n\nThe response body will contain the access token."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://simple-tool-rental-api.glitch.me",
+			"type": "default"
+		},
+		{
+			"key": "token",
+			"value": "c28de10d46fffc355c3858df7d80867baac11cf02ebe4ffc577e11f5ad12100d",
+			"type": "string"
+		},
+		{
+			"key": "category",
+			"value": "electric-generators",
+			"type": "string"
+		}
+	]
+}
