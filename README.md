@@ -1,6 +1,7 @@
 # Tool Rental API - Postman Collection
 
 This Postman collection allows interaction with the Tool Rental API. It includes requests to check API status, retrieve available tools, create orders, and manage them.
+**This collection was created for learning purposes as part of a portfolio project.**
 
 ## Features
 - Check API status.
